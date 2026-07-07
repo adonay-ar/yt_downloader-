@@ -104,6 +104,21 @@ def list_downloads() -> List[Dict[str, Any]]:
     files.sort(key=lambda x: x["name"])
     return files
 
+@app.delete("/api/downloads/{filename}")
+def delete_download(filename: str):
+    """Deletes a downloaded file by name."""
+    downloads_dir = "/app/downloads"
+    # Basic path traversal protection
+    safe_filename = os.path.basename(filename)
+    fp = os.path.join(downloads_dir, safe_filename)
+    if os.path.exists(fp) and os.path.isfile(fp):
+        try:
+            os.remove(fp)
+            return {"success": True, "message": f"Archivo '{safe_filename}' eliminado con éxito."}
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"No se pudo eliminar el archivo: {str(e)}")
+    raise HTTPException(status_code=404, detail="Archivo no encontrado.")
+
 # WebSocket endpoint for real-time progress and OAuth2 login
 @app.websocket("/ws/download")
 async def websocket_endpoint(websocket: WebSocket):

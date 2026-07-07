@@ -34,6 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const downloadedList = document.getElementById('downloaded-list');
     const filesEmptyState = document.getElementById('files-empty-state');
     const btnRefreshFiles = document.getElementById('btn-refresh-files');
+    const btnClear = document.getElementById('btn-clear');
 
     // UI Elements - OAuth2
     const btnStartOauth = document.getElementById('btn-start-oauth');
@@ -317,10 +318,19 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <span class="file-name" title="${file.name}">${file.name}</span>
                                 <span class="file-size"><i class="fa-solid fa-hard-drive"></i> ${file.size}</span>
                             </div>
-                            <a href="${file.path}" download class="btn btn-sm btn-icon" title="Descargar al navegador">
-                                <i class="fa-solid fa-circle-down"></i>
-                            </a>
+                            <div style="display: flex; gap: 0.4rem; align-items: center;">
+                                <a href="${file.path}" download class="btn btn-sm btn-icon" title="Descargar al navegador">
+                                    <i class="fa-solid fa-circle-down"></i>
+                                </a>
+                                <button class="btn btn-sm btn-danger btn-icon btn-delete-file" title="Eliminar del servidor">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </div>
                         `;
+                        const btnDelete = li.querySelector('.btn-delete-file');
+                        btnDelete.addEventListener('click', () => {
+                            deleteFile(file.name);
+                        });
                         downloadedList.appendChild(li);
                     });
                 }
@@ -329,6 +339,35 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Error loading downloads list:', err);
         }
     }
+
+    async function deleteFile(filename) {
+        if (!confirm(`¿Estás seguro de que deseas eliminar permanentemente el archivo "${filename}" del servidor?`)) {
+            return;
+        }
+        try {
+            const response = await fetch(`/api/downloads/${encodeURIComponent(filename)}`, {
+                method: 'DELETE'
+            });
+            const data = await response.json();
+            if (response.ok && data.success) {
+                showToast(data.message, 'success');
+                loadDownloadedFiles();
+            } else {
+                showToast(data.detail || 'Error al eliminar el archivo.', 'danger');
+            }
+        } catch (err) {
+            console.error('Error deleting file:', err);
+            showToast('Error al conectar con el servidor para eliminar el archivo.', 'danger');
+        }
+    }
+
+    btnClear.addEventListener('click', () => {
+        videoUrlInput.value = '';
+        videoCard.classList.add('hidden');
+        consoleEmptyState.classList.remove('hidden');
+        currentVideoUrl = '';
+        showToast('Listo para una nueva descarga.', 'info');
+    });
 
     btnRefreshFiles.addEventListener('click', loadDownloadedFiles);
     // Load files initially
