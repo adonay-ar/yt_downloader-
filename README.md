@@ -16,24 +16,76 @@ Una aplicación web moderna, premium y responsiva para descargar videos y audios
 
 ---
 
-## 🛠️ Requisitos Previos
+## 🛠️ Instalación de Docker
 
-Solo necesitas tener instalado:
-*   [Docker](https://www.docker.com/)
-*   [Docker Compose](https://docs.docker.com/compose/)
+Docker es el único requisito para correr esta aplicación. A continuación los pasos mínimos por sistema operativo:
+
+### Windows
+
+1. Descarga **Docker Desktop** desde: https://www.docker.com/products/docker-desktop
+2. Ejecuta el instalador y sigue el asistente (requiere reinicio).
+3. Al abrir Docker Desktop por primera vez, acepta los términos y espera a que el motor arranque (ícono verde en la barra de tareas).
+4. Verifica que funciona abriendo una terminal (`PowerShell` o `CMD`):
+    ```bash
+    docker --version
+    ```
+
+> **Nota Windows:** Docker Desktop requiere **WSL 2** (Windows Subsystem for Linux). Si el instalador lo solicita, sigue el enlace que aparece para activarlo; generalmente es automático en Windows 10 v2004+ y Windows 11.
+
+### macOS
+
+1. Descarga **Docker Desktop** desde: https://www.docker.com/products/docker-desktop  
+   *(elige la versión correcta: Apple Silicon o Intel)*
+2. Arrastra Docker al directorio de Aplicaciones y ábrelo.
+3. Acepta los permisos del sistema y espera a que el ícono de la ballena aparezca en la barra de menús.
+4. Verifica en Terminal:
+    ```bash
+    docker --version
+    ```
+
+### Linux (Ubuntu / Debian)
+
+Copia y ejecuta estos 3 comandos en tu terminal:
+
+```bash
+# 1. Instala Docker Engine
+curl -fsSL https://get.docker.com | sh
+
+# 2. Agrega tu usuario al grupo docker (para no usar sudo)
+sudo usermod -aG docker $USER
+
+# 3. Reinicia la sesión y verifica
+newgrp docker && docker --version
+```
+
+> Docker Compose ya viene incluido en versiones modernas de Docker (`docker compose` sin guión). Si tu versión es antigua, instálalo con: `sudo apt install docker-compose-plugin`
 
 ---
 
-## 🚀 Instalación y Uso Rápido
+## 🚀 Instalación de la Aplicación
 
-1.  Clona o copia esta carpeta en tu máquina.
-2.  Levanta el contenedor con Docker Compose:
+Una vez que Docker está corriendo:
+
+1. Descarga o clona este repositorio en tu máquina:
+    ```bash
+    git clone https://github.com/adonay-ar/yt_downloader-.git
+    cd yt_downloader-
+    ```
+    > Si no tienes git, descarga el ZIP desde GitHub y descomprímelo.
+
+2. Levanta el contenedor (solo la primera vez tarda ~2 minutos en construir la imagen):
     ```bash
     docker compose up --build -d
     ```
-3.  Abre tu navegador web e ingresa a la siguiente dirección:
+
+3. Abre tu navegador e ingresa a:
     ```text
     http://localhost:38282
+    ```
+
+4. Para detener la aplicación:
+    ```bash
+    docker compose down
     ```
 
 ---

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,12 +8,15 @@
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
     <!-- FontAwesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Custom Style -->
     <link rel="stylesheet" href="/static/css/style.css">
 </head>
+
 <body>
     <div class="background-decor">
         <div class="circle circle-1"></div>
@@ -27,19 +31,21 @@
                 <i class="fa-solid fa-cloud-arrow-down logo-icon"></i>
                 <h1>YTDL <span>Premium</span></h1>
             </div>
-            <p class="subtitle">Descarga videos y audios de YouTube sin límites en tu propio contenedor Docker</p>
+            <p class="subtitle">Descarga videos y audios de YouTube sin límites.</p>
         </header>
 
         <!-- Main Dashboard Grid -->
         <main class="dashboard-grid">
-            
+
             <!-- Left Side: Downloader Console -->
             <section class="card glass console-panel">
-                <h2 class="section-title"><i class="fa-solid fa-terminal icon-accent"></i> Consola de Descarga</h2>
-                
+                <h2 class="section-title"><i class="fa-solid fa-terminal icon-accent"></i> Panel de Descarga</h2>
+
                 <!-- URL Input Group -->
                 <div class="input-group">
-                    <input type="text" id="video-url" placeholder="Pega el enlace de YouTube aquí... (ej: https://www.youtube.com/watch?...)" autocomplete="off">
+                    <input type="text" id="video-url"
+                        placeholder="Pega el enlace de YouTube aquí... (ej: https://www.youtube.com/watch?...)"
+                        autocomplete="off">
                     <button id="btn-fetch" class="btn btn-primary">
                         <span id="fetch-text">Obtener Info</span>
                         <i class="fa-solid fa-magnifying-glass search-icon"></i>
@@ -57,7 +63,7 @@
                         <h3 id="video-title">Título del Video</h3>
                         <p id="video-channel"><i class="fa-solid fa-user-circle"></i> Canal</p>
                         <p id="video-views"><i class="fa-solid fa-eye"></i> 0 vistas</p>
-                        
+
                         <!-- Format Selection -->
                         <div class="control-group">
                             <label for="format-select">Selecciona el Formato de Salida:</label>
@@ -84,16 +90,19 @@
             <!-- Right Side: Config & Downloads Tabs -->
             <section class="card glass tabs-panel">
                 <nav class="tab-headers">
-                    <button class="tab-link active" data-tab="tab-downloads"><i class="fa-solid fa-spinner"></i> Estado</button>
-                    <button class="tab-link" data-tab="tab-files"><i class="fa-solid fa-folder-open"></i> Descargados</button>
-                    <button class="tab-link" data-tab="tab-update"><i class="fa-solid fa-circle-up"></i> Sistema</button>
+                    <button class="tab-link active" data-tab="tab-downloads"><i class="fa-solid fa-spinner"></i>
+                        Estado</button>
+                    <button class="tab-link" data-tab="tab-files"><i class="fa-solid fa-folder-open"></i>
+                        Descargados</button>
+                    <button class="tab-link" data-tab="tab-update"><i class="fa-solid fa-circle-up"></i>
+                        Sistema</button>
                 </nav>
 
                 <div class="tab-contents">
                     <!-- Downloads & Progress Status -->
                     <div id="tab-downloads" class="tab-content active">
                         <h3 class="tab-title">Descarga en Progreso</h3>
-                        
+
                         <div id="download-progress-container" class="download-progress-container hidden">
                             <div class="progress-header">
                                 <span id="progress-filename" class="progress-filename">Nombre_del_Archivo.mp4</span>
@@ -103,8 +112,10 @@
                                 <div id="progress-bar-fill" class="progress-bar-fill" style="width: 0%"></div>
                             </div>
                             <div class="progress-stats">
-                                <span><i class="fa-solid fa-gauge-high"></i> Velocidad: <strong id="progress-speed">-</strong></span>
-                                <span><i class="fa-solid fa-clock"></i> Restante: <strong id="progress-eta">-</strong></span>
+                                <span><i class="fa-solid fa-gauge-high"></i> Velocidad: <strong
+                                        id="progress-speed">-</strong></span>
+                                <span><i class="fa-solid fa-clock"></i> Restante: <strong
+                                        id="progress-eta">-</strong></span>
                             </div>
                             <div id="progress-status-msg" class="progress-status-msg">
                                 Descargando capas de audio y video...
@@ -121,7 +132,8 @@
                     <div id="tab-files" class="tab-content">
                         <div class="flex-title-row">
                             <h3 class="tab-title">Archivos en el Host</h3>
-                            <button id="btn-refresh-files" class="btn btn-sm btn-icon" title="Refrescar Lista"><i class="fa-solid fa-arrows-rotate"></i></button>
+                            <button id="btn-refresh-files" class="btn btn-sm btn-icon" title="Refrescar Lista"><i
+                                    class="fa-solid fa-arrows-rotate"></i></button>
                         </div>
                         <ul id="downloaded-list" class="downloaded-list">
                             <!-- Populated dynamically -->
@@ -136,9 +148,11 @@
                     <div id="tab-auth" class="tab-content">
                         <!-- OAuth2 device authorization -->
                         <div class="auth-section">
-                            <h4 class="auth-subtitle"><i class="fa-brands fa-youtube"></i> Autenticación Oficial OAuth2</h4>
-                            <p class="auth-desc">Permite a yt-dlp identificarse en YouTube con tu cuenta usando el flujo de dispositivo oficial. Evita bloqueos e IPs sospechosas en Docker.</p>
-                            
+                            <h4 class="auth-subtitle"><i class="fa-brands fa-youtube"></i> Autenticación Oficial OAuth2
+                            </h4>
+                            <p class="auth-desc">Permite a yt-dlp identificarse en YouTube con tu cuenta usando el flujo
+                                de dispositivo oficial. Evita bloqueos e IPs sospechosas en Docker.</p>
+
                             <button id="btn-start-oauth" class="btn btn-secondary">
                                 <i class="fa-solid fa-arrow-right-to-bracket"></i> Iniciar Flujo OAuth2
                             </button>
@@ -151,13 +165,16 @@
                                 </div>
                                 <div class="oauth-instruction">
                                     Paso 1: Abre el enlace de registro de Google en tu navegador:
-                                    <a id="oauth-link" href="#" target="_blank" class="oauth-url">https://google.com/device <i class="fa-solid fa-external-link"></i></a>
+                                    <a id="oauth-link" href="#" target="_blank"
+                                        class="oauth-url">https://google.com/device <i
+                                            class="fa-solid fa-external-link"></i></a>
                                 </div>
                                 <div class="oauth-instruction">
                                     Paso 2: Introduce este código de dispositivo:
                                     <div class="oauth-code-box">
                                         <span id="oauth-code">XXXX-XXXX</span>
-                                        <button id="btn-copy-oauth-code" class="btn btn-sm btn-icon" title="Copiar Código"><i class="fa-regular fa-copy"></i></button>
+                                        <button id="btn-copy-oauth-code" class="btn btn-sm btn-icon"
+                                            title="Copiar Código"><i class="fa-regular fa-copy"></i></button>
                                     </div>
                                 </div>
                             </div>
@@ -168,17 +185,21 @@
                         <!-- Cookies Upload -->
                         <div class="auth-section">
                             <h4 class="auth-subtitle"><i class="fa-solid fa-cookie"></i> Archivo cookies.txt</h4>
-                            <p class="auth-desc">Sube tu archivo de cookies Netscape para saltar los retos anti-bots. Puedes exportarlo con extensiones de navegador como "Get cookies.txt LOCALLY".</p>
-                            
+                            <p class="auth-desc">Sube tu archivo de cookies Netscape para saltar los retos anti-bots.
+                                Puedes exportarlo con extensiones de navegador como "Get cookies.txt LOCALLY".</p>
+
                             <div class="cookie-status-bar" id="cookie-status-bar">
                                 <span class="cookie-badge inactive" id="cookie-badge">Inactivo</span>
-                                <span class="cookie-info-text" id="cookie-info-text">No se ha cargado ningún archivo de cookies</span>
-                                <button id="btn-delete-cookie" class="btn btn-sm btn-danger hidden" title="Eliminar cookies"><i class="fa-regular fa-trash-can"></i></button>
+                                <span class="cookie-info-text" id="cookie-info-text">No se ha cargado ningún archivo de
+                                    cookies</span>
+                                <button id="btn-delete-cookie" class="btn btn-sm btn-danger hidden"
+                                    title="Eliminar cookies"><i class="fa-regular fa-trash-can"></i></button>
                             </div>
 
                             <div class="cookie-dropzone" id="cookie-dropzone">
                                 <i class="fa-solid fa-cloud-arrow-up dropzone-icon"></i>
-                                <p>Arrastra tu archivo <strong>cookies.txt</strong> aquí o <span>haz clic para buscar</span></p>
+                                <p>Arrastra tu archivo <strong>cookies.txt</strong> aquí o <span>haz clic para
+                                        buscar</span></p>
                                 <input type="file" id="cookie-file-input" accept=".txt" class="hidden">
                             </div>
                         </div>
@@ -187,8 +208,9 @@
                     <!-- System Updates Tab -->
                     <div id="tab-update" class="tab-content">
                         <h3 class="tab-title">Actualización del Sistema</h3>
-                        <p class="auth-desc">Comprueba si hay nuevas versiones de la aplicación en internet para actualizar los archivos de manera local.</p>
-                        
+                        <p class="auth-desc">Comprueba si hay nuevas versiones de la aplicación en internet para
+                            actualizar los archivos de manera local.</p>
+
                         <div class="update-card glass">
                             <div class="update-info-row">
                                 <span class="update-info-label">Versión Instalada:</span>
@@ -198,12 +220,13 @@
                                 <span class="update-info-label">Estado del Sistema:</span>
                                 <span id="lbl-update-status" class="update-status-badge status-ok">Al día</span>
                             </div>
-                            
+
                             <div class="update-actions">
                                 <button id="btn-check-updates-panel" class="btn btn-secondary">
                                     <i class="fa-solid fa-magnifying-glass"></i> Buscar Actualizaciones
                                 </button>
-                                <button id="btn-mock-update" class="btn btn-icon hidden" title="Simular Nueva Versión (Pruebas)">
+                                <button id="btn-mock-update" class="btn btn-icon hidden"
+                                    title="Simular Nueva Versión (Pruebas)">
                                     <i class="fa-solid fa-vial"></i>
                                 </button>
                             </div>
@@ -215,7 +238,7 @@
                                 <i class="fa-solid fa-circle-arrow-up"></i>
                                 <span>¡Nueva versión disponible: <strong id="lbl-new-version">v1.1.0</strong>!</span>
                             </div>
-                            
+
                             <div class="release-notes-box">
                                 <h5>Notas de la versión:</h5>
                                 <p id="lbl-release-notes">...</p>
@@ -225,23 +248,25 @@
                                 <i class="fa-solid fa-download"></i> Instalar Actualización
                             </button>
                         </div>
-                        
+
                         <div id="update-installing-container" class="update-installing-container hidden">
                             <div class="installing-header">
                                 <span class="spinner"></span>
                                 <span id="lbl-installing-text">Descargando y aplicando código...</span>
                             </div>
-                            <p class="installing-subtext">El contenedor Docker se reiniciará automáticamente. Espera a que la página se reconecte...</p>
+                            <p class="installing-subtext">El contenedor Docker se reiniciará automáticamente. Espera a
+                                que la página se reconecte...</p>
                         </div>
                     </div>
                 </div>
             </section>
         </main>
-        
+
         <footer class="app-footer">
             <span>YTDL Premium v<span id="app-version-val">1.0.0</span></span>
             <span>•</span>
-            <button id="lnk-check-update" class="link-btn"><i class="fa-solid fa-arrows-rotate"></i> Buscar Actualización</button>
+            <button id="lnk-check-update" class="link-btn"><i class="fa-solid fa-arrows-rotate"></i> Buscar
+                Actualización</button>
         </footer>
     </div>
 
@@ -254,4 +279,5 @@
     <!-- Script Application -->
     <script src="/static/js/app.js"></script>
 </body>
+
 </html>
