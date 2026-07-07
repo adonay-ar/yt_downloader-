@@ -56,6 +56,42 @@ YouTube cambia constantemente sus políticas y bloquea IPs de servidores o desca
 
 ---
 
+## 🔄 Sistema de Actualización Automática
+
+La aplicación incluye un sistema de actualización automática vía GitHub. Cuando hay una nueva versión disponible, el usuario puede actualizarla desde la pestaña **Sistema** en la interfaz web con un solo clic.
+
+### ¿Cómo funciona?
+
+1. La app consulta el archivo `version.json` en la rama `main` de este repositorio.
+2. Compara la versión remota con la versión instalada localmente.
+3. Si hay una versión más nueva, descarga el ZIP de la rama `main`, sobrescribe los archivos del proyecto y reinicia el contenedor automáticamente.
+
+### ¿Cómo publicar una nueva versión?
+
+Para lanzar una actualización a todos los usuarios que tienen la app instalada:
+
+1. **Realiza tus cambios** en el código.
+2. **Actualiza el número de versión** en `version.json` (en la raíz del proyecto):
+    ```json
+    {
+      "version": "1.2.0",
+      "release_notes": "Descripción breve de los cambios en esta versión.",
+      "zip_url": "https://github.com/adonay-ar/yt_downloader-/archive/refs/heads/main.zip"
+    }
+    ```
+3. **Sube los cambios a GitHub:**
+    ```bash
+    git add .
+    git commit -m "feat: v1.2.0 - descripción breve"
+    git push origin main
+    ```
+
+A partir de ese momento, cualquier instancia de la app detectará la nueva versión al presionar **"Buscar Actualizaciones"** en la pestaña **Sistema**, y podrá instalarla sin intervención manual adicional.
+
+> **Nota:** La actualización respeta los archivos de usuario (descargas, cookies, caché de tokens OAuth2) y solo sobrescribe el código de la aplicación.
+
+---
+
 ## 📂 Estructura del Proyecto
 
 ```text
@@ -63,6 +99,8 @@ yt_downloader/
 ├── app/
 │   ├── main.py          # API FastAPI y gestión de WebSockets
 │   ├── downloader.py    # Integración con la API de yt-dlp y flujo OAuth2
+│   ├── updater.py       # Módulo de actualización automática desde GitHub
+│   ├── version.txt      # Versión instalada localmente (actualizada por el updater)
 │   └── static/          # Archivos frontend (HTML, CSS, JS)
 │       ├── css/
 │       │   └── style.css
@@ -72,6 +110,7 @@ yt_downloader/
 ├── cache/               # [Volumen Host] Caché de tokens OAuth2 de YouTube
 ├── cookies/             # [Volumen Host] Archivos cookies.txt subidos
 ├── downloads/           # [Volumen Host] Carpeta local con los videos descargados
+├── version.json         # Control de versión remota (leído por el actualizador)
 ├── Dockerfile           # Receta de la imagen Docker (Python + Deno + FFmpeg)
 ├── docker-compose.yml   # Orquestación de servicios y puertos (38282)
 ├── requirements.txt     # Dependencias de Python
