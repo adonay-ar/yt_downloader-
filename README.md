@@ -90,6 +90,42 @@ Una vez que Docker está corriendo:
 
 ---
 
+## ⚙️ Inicio Automático con el Sistema
+
+La aplicación está configurada para **arrancar automáticamente** cada vez que la computadora se enciende. No es necesario abrir ningún programa ni ejecutar ningún comando manualmente.
+
+### ¿Cómo funciona?
+
+Se usan dos mecanismos complementarios:
+
+| Componente | Configuración | Efecto |
+|---|---|---|
+| **Docker Desktop** | Registrado en el inicio de Windows | Se abre al encender el equipo |
+| **Contenedor** | `restart: always` en `docker-compose.yml` | Se inicia solo cuando Docker arranca |
+
+Una vez encendido el equipo, en ~30-60 segundos el servidor ya está disponible en:
+```
+http://localhost:38282
+```
+
+### Desactivar el inicio automático (opcional)
+
+Si en algún momento no quieres que arranque solo:
+
+```bash
+docker update --restart=no yt-downloader
+docker stop yt-downloader
+```
+
+Para volver a habilitarlo:
+
+```bash
+docker update --restart=always yt-downloader
+docker start yt-downloader
+```
+
+---
+
 ## 🔑 Guía para Evadir Bloqueos (Retos de Firma/Bots)
 
 YouTube cambia constantemente sus políticas y bloquea IPs de servidores o descargas automatizadas que no estén validadas. Para evitar el error de *"Sign in to confirm you're not a bot"*, cuentas con dos opciones en la pestaña **Autenticación**:

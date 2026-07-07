@@ -9,4 +9,4 @@ services:
       - ./downloads:/app/downloads
       - ./cache:/root/.cache/yt-dlp
       - ./cookies:/app/cookies
-    restart: unless-stopped
+    restart: always
