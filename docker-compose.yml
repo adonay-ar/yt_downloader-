@@ -1,0 +1,11 @@
+services:
+  yt-downloader:
+    build: .
+    container_name: yt-downloader
+    ports:
+      - "38282:38282"
+    volumes:
+      - ./downloads:/app/downloads
+      - ./cache:/root/.cache/yt-dlp
+      - ./cookies:/app/cookies
+    restart: unless-stopped

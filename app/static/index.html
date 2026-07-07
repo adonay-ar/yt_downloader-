@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YTDL Premium - YouTube Downloader</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom Style -->
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="background-decor">
+        <div class="circle circle-1"></div>
+        <div class="circle circle-2"></div>
+        <div class="circle circle-3"></div>
+    </div>
+
+    <div class="app-container">
+        <!-- Header -->
+        <header>
+            <div class="logo">
+                <i class="fa-solid fa-cloud-arrow-down logo-icon"></i>
+                <h1>YTDL <span>Premium</span></h1>
+            </div>
+            <p class="subtitle">Descarga videos y audios de YouTube sin límites en tu propio contenedor Docker</p>
+        </header>
+
+        <!-- Main Dashboard Grid -->
+        <main class="dashboard-grid">
+            
+            <!-- Left Side: Downloader Console -->
+            <section class="card glass console-panel">
+                <h2 class="section-title"><i class="fa-solid fa-terminal icon-accent"></i> Consola de Descarga</h2>
+                
+                <!-- URL Input Group -->
+                <div class="input-group">
+                    <input type="text" id="video-url" placeholder="Pega el enlace de YouTube aquí... (ej: https://www.youtube.com/watch?...)" autocomplete="off">
+                    <button id="btn-fetch" class="btn btn-primary">
+                        <span id="fetch-text">Obtener Info</span>
+                        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                        <span class="spinner hidden" id="fetch-spinner"></span>
+                    </button>
+                </div>
+
+                <!-- Video Information Card (Shown dynamically) -->
+                <div id="video-card" class="video-card hidden">
+                    <div class="video-preview-wrapper">
+                        <img id="video-thumbnail" src="" alt="Miniatura del Video">
+                        <span id="video-duration" class="video-duration-tag">00:00</span>
+                    </div>
+                    <div class="video-details">
+                        <h3 id="video-title">Título del Video</h3>
+                        <p id="video-channel"><i class="fa-solid fa-user-circle"></i> Canal</p>
+                        <p id="video-views"><i class="fa-solid fa-eye"></i> 0 vistas</p>
+                        
+                        <!-- Format Selection -->
+                        <div class="control-group">
+                            <label for="format-select">Selecciona el Formato de Salida:</label>
+                            <select id="format-select">
+                                <!-- Loaded dynamically -->
+                            </select>
+                        </div>
+
+                        <!-- Action Button -->
+                        <button id="btn-download" class="btn btn-success">
+                            <span>Descargar Contenido</span>
+                            <i class="fa-solid fa-download"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Fallback empty state -->
+                <div id="console-empty-state" class="empty-state">
+                    <i class="fa-solid fa-link empty-icon"></i>
+                    <p>Introduce un enlace arriba para cargar la información del video.</p>
+                </div>
+            </section>
+
+            <!-- Right Side: Config & Downloads Tabs -->
+            <section class="card glass tabs-panel">
+                <nav class="tab-headers">
+                    <button class="tab-link active" data-tab="tab-downloads"><i class="fa-solid fa-spinner"></i> Estado</button>
+                    <button class="tab-link" data-tab="tab-files"><i class="fa-solid fa-folder-open"></i> Descargados</button>
+                    <button class="tab-link" data-tab="tab-auth"><i class="fa-solid fa-shield-halved"></i> Autenticación</button>
+                </nav>
+
+                <div class="tab-contents">
+                    <!-- Downloads & Progress Status -->
+                    <div id="tab-downloads" class="tab-content active">
+                        <h3 class="tab-title">Descarga en Progreso</h3>
+                        
+                        <div id="download-progress-container" class="download-progress-container hidden">
+                            <div class="progress-header">
+                                <span id="progress-filename" class="progress-filename">Nombre_del_Archivo.mp4</span>
+                                <span id="progress-percent" class="progress-percent">0%</span>
+                            </div>
+                            <div class="progress-bar-bg">
+                                <div id="progress-bar-fill" class="progress-bar-fill" style="width: 0%"></div>
+                            </div>
+                            <div class="progress-stats">
+                                <span><i class="fa-solid fa-gauge-high"></i> Velocidad: <strong id="progress-speed">-</strong></span>
+                                <span><i class="fa-solid fa-clock"></i> Restante: <strong id="progress-eta">-</strong></span>
+                            </div>
+                            <div id="progress-status-msg" class="progress-status-msg">
+                                Descargando capas de audio y video...
+                            </div>
+                        </div>
+
+                        <div id="download-empty-state" class="empty-state">
+                            <i class="fa-solid fa-circle-play empty-icon pulse-soft"></i>
+                            <p>No hay descargas activas en este momento.</p>
+                        </div>
+                    </div>
+
+                    <!-- Downloaded Files List -->
+                    <div id="tab-files" class="tab-content">
+                        <div class="flex-title-row">
+                            <h3 class="tab-title">Archivos en el Host</h3>
+                            <button id="btn-refresh-files" class="btn btn-sm btn-icon" title="Refrescar Lista"><i class="fa-solid fa-arrows-rotate"></i></button>
+                        </div>
+                        <ul id="downloaded-list" class="downloaded-list">
+                            <!-- Populated dynamically -->
+                        </ul>
+                        <div id="files-empty-state" class="empty-state hidden">
+                            <i class="fa-solid fa-folder-open empty-icon"></i>
+                            <p>La carpeta de descargas está vacía.</p>
+                        </div>
+                    </div>
+
+                    <!-- Cookies and OAuth Settings -->
+                    <div id="tab-auth" class="tab-content">
+                        <!-- OAuth2 device authorization -->
+                        <div class="auth-section">
+                            <h4 class="auth-subtitle"><i class="fa-brands fa-youtube"></i> Autenticación Oficial OAuth2</h4>
+                            <p class="auth-desc">Permite a yt-dlp identificarse en YouTube con tu cuenta usando el flujo de dispositivo oficial. Evita bloqueos e IPs sospechosas en Docker.</p>
+                            
+                            <button id="btn-start-oauth" class="btn btn-secondary">
+                                <i class="fa-solid fa-arrow-right-to-bracket"></i> Iniciar Flujo OAuth2
+                            </button>
+
+                            <!-- OAuth2 Prompts -->
+                            <div id="oauth-prompt-container" class="oauth-prompt-container hidden">
+                                <div class="oauth-status-info">
+                                    <span class="spinner"></span>
+                                    <span>Esperando autorización...</span>
+                                </div>
+                                <div class="oauth-instruction">
+                                    Paso 1: Abre el enlace de registro de Google en tu navegador:
+                                    <a id="oauth-link" href="#" target="_blank" class="oauth-url">https://google.com/device <i class="fa-solid fa-external-link"></i></a>
+                                </div>
+                                <div class="oauth-instruction">
+                                    Paso 2: Introduce este código de dispositivo:
+                                    <div class="oauth-code-box">
+                                        <span id="oauth-code">XXXX-XXXX</span>
+                                        <button id="btn-copy-oauth-code" class="btn btn-sm btn-icon" title="Copiar Código"><i class="fa-regular fa-copy"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr class="section-divider">
+
+                        <!-- Cookies Upload -->
+                        <div class="auth-section">
+                            <h4 class="auth-subtitle"><i class="fa-solid fa-cookie"></i> Archivo cookies.txt</h4>
+                            <p class="auth-desc">Sube tu archivo de cookies Netscape para saltar los retos anti-bots. Puedes exportarlo con extensiones de navegador como "Get cookies.txt LOCALLY".</p>
+                            
+                            <div class="cookie-status-bar" id="cookie-status-bar">
+                                <span class="cookie-badge inactive" id="cookie-badge">Inactivo</span>
+                                <span class="cookie-info-text" id="cookie-info-text">No se ha cargado ningún archivo de cookies</span>
+                                <button id="btn-delete-cookie" class="btn btn-sm btn-danger hidden" title="Eliminar cookies"><i class="fa-regular fa-trash-can"></i></button>
+                            </div>
+
+                            <div class="cookie-dropzone" id="cookie-dropzone">
+                                <i class="fa-solid fa-cloud-arrow-up dropzone-icon"></i>
+                                <p>Arrastra tu archivo <strong>cookies.txt</strong> aquí o <span>haz clic para buscar</span></p>
+                                <input type="file" id="cookie-file-input" accept=".txt" class="hidden">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Feedback Notification Bar -->
+    <div id="toast" class="toast hidden">
+        <i id="toast-icon" class="fa-solid fa-info-circle"></i>
+        <span id="toast-message">Mensaje del sistema</span>
+    </div>
+
+    <!-- Script Application -->
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
