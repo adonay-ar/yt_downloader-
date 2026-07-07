@@ -1,5 +1,5 @@
 {
-  "version": "1.0.0",
-  "release_notes": "Versión inicial con soporte para Docker, WebSockets, Deno JS engine, y actualización automática integrada.",
+  "version": "1.1.0",
+  "release_notes": "v1.1.0 - Se ocultó la pestaña de Autenticación y el botón de simulación de actualizaciones de la interfaz principal.",
   "zip_url": "https://github.com/adonay-ar/yt_downloader-/archive/refs/heads/main.zip"
 }
