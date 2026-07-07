@@ -5,6 +5,7 @@ services:
     ports:
       - "38282:38282"
     volumes:
+      - ./:/app
       - ./downloads:/app/downloads
       - ./cache:/root/.cache/yt-dlp
       - ./cookies:/app/cookies

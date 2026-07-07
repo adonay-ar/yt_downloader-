@@ -15,6 +15,7 @@ from app.downloader import (
     get_cookie_path,
     COOKIE_FILE_PATH
 )
+from app.updater import get_current_version, check_for_updates, perform_update
 
 app = FastAPI(title="YTDL Premium Downloader API")
 
@@ -163,6 +164,62 @@ async def websocket_endpoint(websocket: WebSocket):
             await websocket.send_json({"type": "error", "message": str(e)})
         except:
             pass
+
+# Pydantic models for update request
+class UpdateInstallRequest(BaseModel):
+    zip_url: str
+    version: str
+
+@app.get("/api/update/version")
+async def api_get_version():
+    return {"version": get_current_version()}
+
+@app.get("/api/update/check")
+async def api_check_update(url: str = None):
+    # Allows pulling from custom environment variable or raw URL
+    update_url = url or os.getenv(
+        "UPDATE_URL", 
+        "https://raw.githubusercontent.com/adonay-ar/yt_downloader-/main/version.json"
+    )
+    result = check_for_updates(update_url)
+    return result
+
+@app.get("/api/update/mock-config")
+async def api_mock_config():
+    # Helper to test updates locally without setting up raw files in a public repo
+    return {
+        "version": "1.1.0",
+        "release_notes": "Actualización simulada. Añade soporte mejorado para la adaptabilidad responsiva del dashboard y optimizaciones de seguridad en hilos.",
+        "zip_url": "https://github.com/adonay-ar/yt_downloader-/archive/refs/heads/main.zip"
+    }
+
+@app.post("/api/update/install")
+async def api_install_update(req: UpdateInstallRequest):
+    # Perform download and extraction
+    result = perform_update(req.zip_url)
+    
+    if result.get("success"):
+        # Write new version tag
+        try:
+            version_file = os.path.join("/app", "app", "version.txt")
+            with open(version_file, "w", encoding="utf-8") as f:
+                f.write(req.version)
+        except Exception as e:
+            print(f"Failed to write version.txt: {e}")
+            
+        # Spawn exit task to allow clean response before container reload
+        async def restart_container():
+            await asyncio.sleep(1.0)
+            print("Restarting application container to apply update...")
+            os._exit(0)
+            
+        asyncio.create_task(restart_container())
+        return {"success": True, "message": "Actualización instalada con éxito. Reiniciando contenedor..."}
+    else:
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "error": result.get("error")}
+        )
 
 # Serve static downloads folder directly
 app.mount("/downloads", StaticFiles(directory="/app/downloads"), name="downloads")

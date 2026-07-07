@@ -54,9 +54,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const toastIcon = document.getElementById('toast-icon');
     const toastMessage = document.getElementById('toast-message');
 
+    // UI Elements - Updates
+    const appVersionVal = document.getElementById('app-version-val');
+    const lblCurrentVersion = document.getElementById('lbl-current-version');
+    const lblUpdateStatus = document.getElementById('lbl-update-status');
+    const btnCheckUpdatesPanel = document.getElementById('btn-check-updates-panel');
+    const btnMockUpdate = document.getElementById('btn-mock-update');
+    const updateDetailsContainer = document.getElementById('update-details-container');
+    const lblNewVersion = document.getElementById('lbl-new-version');
+    const lblReleaseNotes = document.getElementById('lbl-release-notes');
+    const btnInstallUpdate = document.getElementById('btn-install-update');
+    const updateInstallingContainer = document.getElementById('update-installing-container');
+    const lnkCheckUpdate = document.getElementById('lnk-check-update');
+    const lblInstallingText = document.getElementById('lbl-installing-text');
+
     // State Variables
     let currentVideoUrl = '';
     let socket = null;
+    let pendingUpdateData = null;
 
     /* ==========================================
        TAB MANAGEMENT
@@ -481,6 +496,178 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    /* ==========================================
+       SYSTEM UPDATES LOGIC
+       ========================================== */
+    async function fetchVersion() {
+        try {
+            const response = await fetch('/api/update/version');
+            if (response.ok) {
+                const data = await response.json();
+                appVersionVal.textContent = data.version;
+                lblCurrentVersion.textContent = `v${data.version}`;
+            }
+        } catch (err) {
+            console.error('Error fetching version:', err);
+        }
+    }
+
+    async function checkUpdates(isManual = false) {
+        if (isManual) {
+            showToast('Buscando actualizaciones...', 'info');
+            btnCheckUpdatesPanel.disabled = true;
+        }
+
+        try {
+            const response = await fetch('/api/update/check');
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success) {
+                    if (data.update_available) {
+                        pendingUpdateData = {
+                            zip_url: data.zip_url,
+                            version: data.remote_version
+                        };
+                        
+                        // Show update box
+                        lblNewVersion.textContent = `v${data.remote_version}`;
+                        lblReleaseNotes.textContent = data.release_notes;
+                        updateDetailsContainer.classList.remove('hidden');
+                        
+                        // Update status badge
+                        lblUpdateStatus.className = 'update-status-badge status-alert';
+                        lblUpdateStatus.textContent = 'Actualización Disponible';
+                        
+                        showToast(`¡Nueva versión v${data.remote_version} disponible!`, 'info');
+                    } else {
+                        pendingUpdateData = null;
+                        updateDetailsContainer.classList.add('hidden');
+                        
+                        // Update status badge
+                        lblUpdateStatus.className = 'update-status-badge status-ok';
+                        lblUpdateStatus.textContent = 'Al día';
+                        
+                        if (isManual) {
+                            showToast('La aplicación ya está actualizada a la última versión.', 'success');
+                        }
+                    }
+                } else {
+                    if (isManual) showToast(`Error al comprobar: ${data.error}`, 'danger');
+                }
+            }
+        } catch (err) {
+            console.error('Error checking updates:', err);
+            if (isManual) showToast('Error al conectar con el servidor de actualizaciones.', 'danger');
+        } finally {
+            if (isManual) btnCheckUpdatesPanel.disabled = false;
+        }
+    }
+
+    // Trigger mock update configurations for local user validation
+    btnMockUpdate.addEventListener('click', async () => {
+        showToast('Simulando búsqueda de actualización...', 'info');
+        btnMockUpdate.disabled = true;
+        
+        try {
+            const response = await fetch('/api/update/mock-config');
+            if (response.ok) {
+                const data = await response.json();
+                pendingUpdateData = {
+                    zip_url: data.zip_url,
+                    version: data.version
+                };
+                
+                // Show update details
+                lblNewVersion.textContent = `v${data.version}`;
+                lblReleaseNotes.textContent = data.release_notes;
+                updateDetailsContainer.classList.remove('hidden');
+                
+                // Update badge
+                lblUpdateStatus.className = 'update-status-badge status-alert';
+                lblUpdateStatus.textContent = 'Actualización Disponible (Simulada)';
+                
+                showToast(`Simulación completada. Nueva versión v${data.version} disponible para instalar.`, 'success');
+                switchTab('tab-update');
+            }
+        } catch (err) {
+            console.error('Error in mock update:', err);
+            showToast('Error al simular actualización.', 'danger');
+        } finally {
+            btnMockUpdate.disabled = false;
+        }
+    });
+
+    btnCheckUpdatesPanel.addEventListener('click', () => checkUpdates(true));
+
+    lnkCheckUpdate.addEventListener('click', (e) => {
+        e.preventDefault();
+        switchTab('tab-update');
+        checkUpdates(true);
+    });
+
+    btnInstallUpdate.addEventListener('click', async () => {
+        if (!pendingUpdateData) return;
+        
+        if (!confirm(`¿Deseas descargar e instalar la versión ${pendingUpdateData.version} de la aplicación?\nEl contenedor Docker se reiniciará automáticamente.`)) {
+            return;
+        }
+
+        btnInstallUpdate.disabled = true;
+        updateDetailsContainer.classList.add('hidden');
+        updateInstallingContainer.classList.remove('hidden');
+        
+        try {
+            const response = await fetch('/api/update/install', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(pendingUpdateData)
+            });
+
+            const data = await response.json();
+            if (response.ok && data.success) {
+                lblInstallingText.textContent = 'Instalado con éxito. Reiniciando...';
+                showToast('Actualización descargada. Esperando reinicio de contenedor...', 'success');
+                
+                // Start polling to detect when the container recovers
+                startReconnectPoll();
+            } else {
+                showToast(data.error || 'La instalación falló.', 'danger');
+                updateInstallingContainer.classList.add('hidden');
+                updateDetailsContainer.classList.remove('hidden');
+                btnInstallUpdate.disabled = false;
+            }
+        } catch (err) {
+            console.error('Error installing update:', err);
+            // Since Uvicorn exits, it might drop the socket/fetch connection with a network error.
+            // In case of a premature connection close, we still poll to see if it recovered!
+            lblInstallingText.textContent = 'Aplicando cambios...';
+            showToast('Conexión reiniciada para aplicar actualización...', 'info');
+            startReconnectPoll();
+        }
+    });
+
+    function startReconnectPoll() {
+        let attempts = 0;
+        const interval = setInterval(async () => {
+            attempts++;
+            try {
+                // Try fetching a light endpoint to verify server is back
+                const res = await fetch('/api/update/version');
+                if (res.ok) {
+                    clearInterval(interval);
+                    showToast('¡Aplicación reconectada y actualizada con éxito!', 'success');
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                }
+            } catch (e) {
+                console.log(`Buscando conexión... intento ${attempts}`);
+            }
+        }, 2000);
+    }
+
     // Check cookie status on load
     checkCookieStatus();
+    // Load app version details
+    fetchVersion();
 });

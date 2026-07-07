@@ -87,6 +87,7 @@
                     <button class="tab-link active" data-tab="tab-downloads"><i class="fa-solid fa-spinner"></i> Estado</button>
                     <button class="tab-link" data-tab="tab-files"><i class="fa-solid fa-folder-open"></i> Descargados</button>
                     <button class="tab-link" data-tab="tab-auth"><i class="fa-solid fa-shield-halved"></i> Autenticación</button>
+                    <button class="tab-link" data-tab="tab-update"><i class="fa-solid fa-circle-up"></i> Sistema</button>
                 </nav>
 
                 <div class="tab-contents">
@@ -183,9 +184,66 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- System Updates Tab -->
+                    <div id="tab-update" class="tab-content">
+                        <h3 class="tab-title">Actualización del Sistema</h3>
+                        <p class="auth-desc">Comprueba si hay nuevas versiones de la aplicación en internet para actualizar los archivos de manera local.</p>
+                        
+                        <div class="update-card glass">
+                            <div class="update-info-row">
+                                <span class="update-info-label">Versión Instalada:</span>
+                                <strong id="lbl-current-version">v1.0.0</strong>
+                            </div>
+                            <div class="update-info-row">
+                                <span class="update-info-label">Estado del Sistema:</span>
+                                <span id="lbl-update-status" class="update-status-badge status-ok">Al día</span>
+                            </div>
+                            
+                            <div class="update-actions">
+                                <button id="btn-check-updates-panel" class="btn btn-secondary">
+                                    <i class="fa-solid fa-magnifying-glass"></i> Buscar Actualizaciones
+                                </button>
+                                <button id="btn-mock-update" class="btn btn-icon" title="Simular Nueva Versión (Pruebas)">
+                                    <i class="fa-solid fa-vial"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Update Info Block (Hidden by default) -->
+                        <div id="update-details-container" class="update-details-container hidden">
+                            <div class="update-alert-header">
+                                <i class="fa-solid fa-circle-arrow-up"></i>
+                                <span>¡Nueva versión disponible: <strong id="lbl-new-version">v1.1.0</strong>!</span>
+                            </div>
+                            
+                            <div class="release-notes-box">
+                                <h5>Notas de la versión:</h5>
+                                <p id="lbl-release-notes">...</p>
+                            </div>
+
+                            <button id="btn-install-update" class="btn btn-primary btn-full-width">
+                                <i class="fa-solid fa-download"></i> Instalar Actualización
+                            </button>
+                        </div>
+                        
+                        <div id="update-installing-container" class="update-installing-container hidden">
+                            <div class="installing-header">
+                                <span class="spinner"></span>
+                                <span id="lbl-installing-text">Descargando y aplicando código...</span>
+                            </div>
+                            <p class="installing-subtext">El contenedor Docker se reiniciará automáticamente. Espera a que la página se reconecte...</p>
+                        </div>
+                    </div>
                 </div>
             </section>
         </main>
+        
+        <footer class="app-footer">
+            <span>YTDL Premium v<span id="app-version-val">1.0.0</span></span>
+            <span>•</span>
+            <button id="lnk-check-update" class="link-btn"><i class="fa-solid fa-arrows-rotate"></i> Buscar Actualización</button>
+        </footer>
     </div>
 
     <!-- Feedback Notification Bar -->

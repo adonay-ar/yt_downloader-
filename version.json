@@ -1,0 +1,5 @@
+{
+  "version": "1.0.0",
+  "release_notes": "Versión inicial con soporte para Docker, WebSockets, Deno JS engine, y actualización automática integrada.",
+  "zip_url": "https://github.com/adonay-ar/yt_downloader-/archive/refs/heads/main.zip"
+}
