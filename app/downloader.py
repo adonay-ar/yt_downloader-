@@ -36,6 +36,9 @@ def get_video_info(url: str) -> Dict[str, Any]:
         'noplaylist': True,
         'quiet': True,
         'no_warnings': True,
+        'retries': 10,
+        'fragment_retries': 10,
+        'socket_timeout': 30,
     }
     if cookie_path:
         ydl_opts['cookiefile'] = cookie_path
@@ -106,6 +109,9 @@ async def download_video_async(url: str, format_id: str, progress_callback: Call
         'noplaylist': True,
         'quiet': True,
         'no_warnings': True,
+        'retries': 10,
+        'fragment_retries': 10,
+        'socket_timeout': 30,
     }
 
     if cookie_path:
