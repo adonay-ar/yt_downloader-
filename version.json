@@ -1,6 +1,6 @@
 {
-  "version": "1.1.0",
+  "version": "1.0.0",
   "release_notes": "Notas del lanzamiento...",
   "zip_url": "https://github.com/adonay-ar/yt_downloader-/archive/refs/heads/main.zip",
-  "exe_url": "https://github.com/adonay-ar/yt_downloader-/releases/download/v1.1.0/yt_downloader.exe"
+  "exe_url": "https://github.com/adonay-ar/yt_downloader-/releases/download/v1.0.0/yt_downloader.exe"
 }
