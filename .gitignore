@@ -26,3 +26,9 @@ cookies/
 
 # Local cookies file fallback
 cookies.txt
+
+# PyInstaller build artifacts
+build/
+dist/
+python/
+*.spec

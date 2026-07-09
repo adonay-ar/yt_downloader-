@@ -565,6 +565,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (data.update_available) {
                         pendingUpdateData = {
                             zip_url: data.zip_url,
+                            exe_url: data.exe_url,
                             version: data.remote_version
                         };
                         
@@ -613,6 +614,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = await response.json();
                 pendingUpdateData = {
                     zip_url: data.zip_url,
+                    exe_url: data.exe_url,
                     version: data.version
                 };
                 

@@ -180,6 +180,41 @@ A partir de ese momento, cualquier instancia de la app detectará la nueva versi
 
 ---
 
+## 🖥️ Versión de Escritorio (Standalone .exe para Windows)
+
+Puedes compilar y ejecutar esta aplicación en Windows como un programa independiente (`.exe`) sin necesidad de instalar Docker ni Python en las computadoras de los usuarios finales.
+
+### ¿Cómo compilar el ejecutable?
+
+Para compilar el `.exe` desde tu computadora de desarrollo:
+1. Asegúrate de tener el archivo ZIP de **Python embebido (portable)** descomprimido dentro de la carpeta `python` en la raíz del proyecto (debe contener `python.exe` y sus DLLs).
+2. Haz doble clic en el script **`build.bat`** en la raíz del proyecto.
+3. El script configurará automáticamente Python, instalará `pip`, las dependencias de `requirements.txt` y compilará la aplicación en un solo paso aislado.
+4. Encontrarás el ejecutable listo en la carpeta **`dist/yt_downloader.exe`**.
+
+### ¿Cómo publicar una actualización del ejecutable?
+
+Para lanzar una actualización del ejecutable `.exe` a todos tus usuarios:
+
+1. Modifica tu código localmente y actualiza el número de versión en `app/version.txt` (ej. de `1.0.0` a `1.1.0`).
+2. Compila el nuevo ejecutable haciendo doble clic en `build.bat`.
+3. Sube el archivo `dist/yt_downloader.exe` a una URL pública de descarga (se recomienda usar **GitHub Releases** en tu repositorio para obtener un enlace permanente, ej: `https://github.com/adonay-ar/yt_downloader-/releases/download/v1.1.0/yt_downloader.exe`).
+4. Actualiza el manifiesto `version.json` en la rama principal (`main`) de GitHub añadiendo la clave `exe_url` con el nuevo enlace directo de descarga:
+    ```json
+    {
+      "version": "1.1.0",
+      "release_notes": "Notas del lanzamiento...",
+      "zip_url": "https://github.com/adonay-ar/yt_downloader-/archive/refs/heads/main.zip",
+      "exe_url": "https://github.com/adonay-ar/yt_downloader-/releases/download/v1.1.0/yt_downloader.exe"
+    }
+    ```
+5. Sube el cambio de `version.json` a GitHub (`git push`). Las aplicaciones `.exe` instaladas detectarán la actualización, descargarán el nuevo ejecutable en segundo plano y se actualizarán automáticamente reiniciando el programa.
+
+### FFmpeg en la versión de escritorio
+Para descargas de alta calidad (1080p o superior) y extracciones de MP3, `yt-dlp` requiere FFmpeg. Si los usuarios no lo tienen instalado en su sistema, basta con que coloquen el archivo **`ffmpeg.exe`** en la misma carpeta junto a `yt_downloader.exe`. La aplicación lo detectará y utilizará automáticamente.
+
+---
+
 ## 📂 Estructura del Proyecto
 
 ```text

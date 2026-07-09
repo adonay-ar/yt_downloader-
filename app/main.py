@@ -1,12 +1,13 @@
 import os
 import shutil
 import asyncio
+import sys
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 
 from app.downloader import (
     get_video_info,
@@ -15,7 +16,8 @@ from app.downloader import (
     get_cookie_path,
     COOKIE_FILE_PATH
 )
-from app.updater import get_current_version, check_for_updates, perform_update
+from app.updater import get_current_version, check_for_updates, perform_update, perform_exe_update
+from app.paths import get_downloads_dir, get_static_dir, get_version_file_path
 
 app = FastAPI(title="YTDL Premium Downloader API")
 
@@ -85,7 +87,7 @@ def delete_cookies():
 @app.get("/api/downloads/list")
 def list_downloads() -> List[Dict[str, Any]]:
     """Lists files inside the downloads directory with their sizes."""
-    downloads_dir = "/app/downloads"
+    downloads_dir = get_downloads_dir()
     if not os.path.exists(downloads_dir):
         return []
     
@@ -107,7 +109,7 @@ def list_downloads() -> List[Dict[str, Any]]:
 @app.delete("/api/downloads/{filename}")
 def delete_download(filename: str):
     """Deletes a downloaded file by name."""
-    downloads_dir = "/app/downloads"
+    downloads_dir = get_downloads_dir()
     # Basic path traversal protection
     safe_filename = os.path.basename(filename)
     fp = os.path.join(downloads_dir, safe_filename)
@@ -184,6 +186,7 @@ async def websocket_endpoint(websocket: WebSocket):
 class UpdateInstallRequest(BaseModel):
     zip_url: str
     version: str
+    exe_url: Optional[str] = None
 
 @app.get("/api/update/version")
 async def api_get_version():
@@ -205,54 +208,65 @@ async def api_mock_config():
     return {
         "version": "1.1.0",
         "release_notes": "Actualización simulada. Añade soporte mejorado para la adaptabilidad responsiva del dashboard y optimizaciones de seguridad en hilos.",
-        "zip_url": "https://github.com/adonay-ar/yt_downloader-/archive/refs/heads/main.zip"
+        "zip_url": "https://github.com/adonay-ar/yt_downloader-/archive/refs/heads/main.zip",
+        "exe_url": "https://github.com/adonay-ar/yt_downloader-/releases/download/v1.1.0/yt_downloader.exe"
     }
 
 @app.post("/api/update/install")
 async def api_install_update(req: UpdateInstallRequest):
-    # Perform download and extraction
-    result = perform_update(req.zip_url)
-    
-    if result.get("success"):
-        # Write new version tag
-        try:
-            version_file = os.path.join("/app", "app", "version.txt")
-            with open(version_file, "w", encoding="utf-8") as f:
-                f.write(req.version)
-        except Exception as e:
-            print(f"Failed to write version.txt: {e}")
+    if getattr(sys, 'frozen', False):
+        exe_url = req.exe_url or req.zip_url
+        if not exe_url:
+            raise HTTPException(status_code=400, detail="EXE URL is required for updating the compiled app.")
             
-        # Spawn exit task to allow clean response before container reload
-        async def restart_container():
-            await asyncio.sleep(1.0)
-            print("Restarting application container to apply update...")
-            os._exit(0)
-            
-        asyncio.create_task(restart_container())
-        return {"success": True, "message": "Actualización instalada con éxito. Reiniciando contenedor..."}
+        result = perform_exe_update(exe_url, req.version)
+        if result.get("success"):
+            async def restart_app():
+                await asyncio.sleep(1.0)
+                print("Reopening application to apply update...")
+                os._exit(0)
+            asyncio.create_task(restart_app())
+            return {"success": True, "message": "Actualización instalada con éxito. Reiniciando aplicación..."}
+        else:
+            return JSONResponse(
+                status_code=500,
+                content={"success": False, "error": result.get("error")}
+            )
     else:
-        return JSONResponse(
-            status_code=500,
-            content={"success": False, "error": result.get("error")}
-        )
+        # Perform download and extraction (Docker/source update)
+        result = perform_update(req.zip_url)
+        
+        if result.get("success"):
+            # Write new version tag
+            try:
+                version_file = get_version_file_path()
+                with open(version_file, "w", encoding="utf-8") as f:
+                    f.write(req.version)
+            except Exception as e:
+                print(f"Failed to write version.txt: {e}")
+                
+            # Spawn exit task to allow clean response before container reload
+            async def restart_container():
+                await asyncio.sleep(1.0)
+                print("Restarting application container to apply update...")
+                os._exit(0)
+                
+            asyncio.create_task(restart_container())
+            return {"success": True, "message": "Actualización instalada con éxito. Reiniciando contenedor..."}
+        else:
+            return JSONResponse(
+                status_code=500,
+                content={"success": False, "error": result.get("error")}
+            )
 
 # Serve static downloads folder directly
-app.mount("/downloads", StaticFiles(directory="/app/downloads"), name="downloads")
+app.mount("/downloads", StaticFiles(directory=get_downloads_dir()), name="downloads")
 
 # Serve UI static folder
-# We check if directory exists first
-static_dir = "/app/app/static"
+static_dir = get_static_dir()
 if os.path.exists(static_dir):
     app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
     @app.get("/")
     async def read_index():
         return FileResponse(os.path.join(static_dir, "index.html"))
-else:
-    # Fallback to local development path if needed
-    local_static = "app/static"
-    if os.path.exists(local_static):
-        app.mount("/static", StaticFiles(directory=local_static), name="static")
-        @app.get("/")
-        async def read_index():
-            return FileResponse(os.path.join(local_static, "index.html"))

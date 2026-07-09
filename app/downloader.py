@@ -1,21 +1,30 @@
 import re
 import subprocess
 import os
+import sys
 import asyncio
 import yt_dlp
 from typing import Callable, Optional, Dict, Any
 
+from app.paths import (
+    get_base_dir,
+    get_downloads_dir,
+    get_cookies_dir,
+    get_cookie_file_path
+)
+
 # Ensure downloads and cookies directories exist
-os.makedirs('/app/downloads', exist_ok=True)
-os.makedirs('/app/cookies', exist_ok=True)
+get_downloads_dir()
+get_cookies_dir()
 
 # Define path for cookies file
-COOKIE_FILE_PATH = '/app/cookies/cookies.txt'
+COOKIE_FILE_PATH = get_cookie_file_path()
 
 def get_cookie_path() -> Optional[str]:
     """Returns the cookie path if the cookie file exists and is not empty."""
-    if os.path.exists(COOKIE_FILE_PATH) and os.path.getsize(COOKIE_FILE_PATH) > 0:
-        return COOKIE_FILE_PATH
+    cookie_path = get_cookie_file_path()
+    if os.path.exists(cookie_path) and os.path.getsize(cookie_path) > 0:
+        return cookie_path
     return None
 
 def format_duration(seconds: Optional[int]) -> str:
@@ -105,7 +114,7 @@ async def download_video_async(url: str, format_id: str, progress_callback: Call
     
     # Base options
     ydl_opts = {
-        'outtmpl': '/app/downloads/%(title)s.%(ext)s',
+        'outtmpl': os.path.join(get_downloads_dir(), '%(title)s.%(ext)s'),
         'noplaylist': True,
         'quiet': True,
         'no_warnings': True,
@@ -113,6 +122,13 @@ async def download_video_async(url: str, format_id: str, progress_callback: Call
         'fragment_retries': 10,
         'socket_timeout': 30,
     }
+
+    # Check for local ffmpeg in the base directory
+    base_dir = get_base_dir()
+    ffmpeg_exe = "ffmpeg.exe" if sys.platform.startswith("win") else "ffmpeg"
+    local_ffmpeg = os.path.join(base_dir, ffmpeg_exe)
+    if os.path.exists(local_ffmpeg):
+        ydl_opts['ffmpeg_location'] = local_ffmpeg
 
     if cookie_path:
         ydl_opts['cookiefile'] = cookie_path
@@ -200,13 +216,26 @@ async def download_video_async(url: str, format_id: str, progress_callback: Call
 async def run_oauth2_flow(ws_send_callback: Callable[[Dict[str, Any]], Any]):
     """Runs yt-dlp in a subprocess to trigger and wait for YouTube OAuth2 flow."""
     # We use a dummy link to trigger authentication, --skip-download avoids downloading the video
-    cmd = [
-        "yt-dlp",
-        "--username", "oauth2",
-        "--password", "",
-        "--skip-download",
-        "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-    ]
+    if getattr(sys, 'frozen', False):
+        # In frozen executable, we invoke our own executable with --run-ytdl
+        cmd = [
+            sys.executable,
+            "--run-ytdl",
+            "--username", "oauth2",
+            "--password", "",
+            "--skip-download",
+            "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        ]
+    else:
+        # In python environment, run yt_dlp package directly
+        cmd = [
+            sys.executable,
+            "-m", "yt_dlp",
+            "--username", "oauth2",
+            "--password", "",
+            "--skip-download",
+            "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        ]
     
     try:
         # Create subprocess and read lines asynchronously
