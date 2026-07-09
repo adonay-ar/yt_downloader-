@@ -68,6 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const updateInstallingContainer = document.getElementById('update-installing-container');
     const lnkCheckUpdate = document.getElementById('lnk-check-update');
     const lblInstallingText = document.getElementById('lbl-installing-text');
+    const btnShutdownServer = document.getElementById('btn-shutdown-server');
 
     // State Variables
     let currentVideoUrl = '';
@@ -705,6 +706,30 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.log(`Buscando conexión... intento ${attempts}`);
             }
         }, 2000);
+    }
+
+    // Bind shutdown server
+    if (btnShutdownServer) {
+        btnShutdownServer.addEventListener('click', async () => {
+            if (confirm('¿Estás seguro de que quieres apagar el servidor de YouTube Downloader?\nEl programa se cerrará en tu computadora.')) {
+                try {
+                    const res = await fetch('/api/system/shutdown', { method: 'POST' });
+                    if (res.ok) {
+                        showToast('Servidor apagado. Cerrando...', 'success');
+                        setTimeout(() => {
+                            window.close();
+                        }, 1200);
+                    } else {
+                        showToast('Error al apagar el servidor.', 'danger');
+                    }
+                } catch (e) {
+                    showToast('Servidor apagado con éxito. Cerrando...', 'success');
+                    setTimeout(() => {
+                        window.close();
+                    }, 1200);
+                }
+            }
+        });
     }
 
     // Check cookie status on load

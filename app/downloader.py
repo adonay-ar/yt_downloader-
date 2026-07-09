@@ -299,3 +299,53 @@ async def run_oauth2_flow(ws_send_callback: Callable[[Dict[str, Any]], Any]):
             'type': 'oauth_failed',
             'message': f'Failed to run authentication flow: {str(e)}'
         })
+
+def check_and_download_ffmpeg():
+    """Checks if ffmpeg is available. If not, downloads a static build for Windows in the background."""
+    import sys
+    import shutil
+    import urllib.request
+    import zipfile
+    import tempfile
+    
+    # We only auto-download for Windows
+    if not sys.platform.startswith("win"):
+        return
+        
+    # 1. Check if ffmpeg is already in the system PATH
+    if shutil.which("ffmpeg") is not None:
+        print("[FFmpeg Manager] FFmpeg found in system PATH.")
+        return
+        
+    # 2. Check if ffmpeg.exe exists in the base directory
+    base_dir = get_base_dir()
+    ffmpeg_exe_path = os.path.join(base_dir, "ffmpeg.exe")
+    if os.path.exists(ffmpeg_exe_path):
+        print(f"[FFmpeg Manager] FFmpeg found locally at: {ffmpeg_exe_path}")
+        return
+        
+    # 3. If missing, download it
+    print("[FFmpeg Manager] FFmpeg not found. Starting background download...")
+    try:
+        # Download stable ffbinaries Windows 64-bit build (only contains ffmpeg.exe)
+        url = "https://github.com/ffbinaries/ffbinaries-prebuilt/releases/download/v4.4.1/ffmpeg-4.4.1-win-64.zip"
+        temp_zip = os.path.join(tempfile.gettempdir(), "ffmpeg_download.zip")
+        
+        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req, timeout=180) as response:
+            with open(temp_zip, 'wb') as f:
+                f.write(response.read())
+                
+        # Extract the zip file contents (ffmpeg.exe) directly into base_dir
+        with zipfile.ZipFile(temp_zip, 'r') as zip_ref:
+            zip_ref.extractall(base_dir)
+            
+        # Clean up zip
+        if os.path.exists(temp_zip):
+            try: os.remove(temp_zip)
+            except: pass
+            
+        print(f"[FFmpeg Manager] FFmpeg downloaded and extracted successfully to: {base_dir}")
+    except Exception as e:
+        print(f"[FFmpeg Manager] Failed to automatically download FFmpeg: {e}")
+

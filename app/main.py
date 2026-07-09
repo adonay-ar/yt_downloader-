@@ -14,7 +14,8 @@ from app.downloader import (
     download_video_async,
     run_oauth2_flow,
     get_cookie_path,
-    COOKIE_FILE_PATH
+    COOKIE_FILE_PATH,
+    check_and_download_ffmpeg
 )
 from app.updater import get_current_version, check_for_updates, perform_update, perform_exe_update
 from app.paths import get_downloads_dir, get_static_dir, get_version_file_path
@@ -270,3 +271,17 @@ if os.path.exists(static_dir):
     @app.get("/")
     async def read_index():
         return FileResponse(os.path.join(static_dir, "index.html"))
+
+@app.on_event("startup")
+async def startup_event():
+    import threading
+    threading.Thread(target=check_and_download_ffmpeg, daemon=True).start()
+
+@app.post("/api/system/shutdown")
+async def shutdown_system():
+    async def stop_server():
+        await asyncio.sleep(1.0)
+        print("Shutting down local server...")
+        os._exit(0)
+    asyncio.create_task(stop_server())
+    return {"success": True, "message": "Servidor apagándose..."}

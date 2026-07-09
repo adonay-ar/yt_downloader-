@@ -57,7 +57,7 @@ if errorlevel 1 (
 )
 
 echo Compilando aplicacion a un unico ejecutable .exe...
-"%LOCAL_PYTHON%" -m PyInstaller --onefile --add-data "app/static;app/static" --add-data "app/version.txt;app" --name yt_downloader run.py
+"%LOCAL_PYTHON%" -m PyInstaller --onefile --noconsole --add-data "app/static;app/static" --add-data "app/version.txt;app" --name yt_downloader run.py
 if errorlevel 1 (
     echo [ERROR] Fallo la compilacion de la aplicacion.
     pause
