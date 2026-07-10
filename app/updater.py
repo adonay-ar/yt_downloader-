@@ -7,6 +7,7 @@ import sys
 import platform
 import tempfile
 import subprocess
+import ssl
 from app.paths import get_base_dir, get_version_file_path
 
 def get_current_version():
@@ -36,7 +37,8 @@ def check_for_updates(update_url: str):
             update_url, 
             headers={'User-Agent': 'Mozilla/5.0'}
         )
-        with urllib.request.urlopen(req, timeout=10) as response:
+        context = ssl._create_unverified_context()
+        with urllib.request.urlopen(req, context=context, timeout=10) as response:
             data = json.loads(response.read().decode('utf-8'))
             remote_version = data.get("version", "1.0.0")
             zip_url = data.get("zip_url", "")
@@ -77,7 +79,8 @@ def perform_update(zip_url: str):
             zip_url, 
             headers={'User-Agent': 'Mozilla/5.0'}
         )
-        with urllib.request.urlopen(req, timeout=45) as response:
+        context = ssl._create_unverified_context()
+        with urllib.request.urlopen(req, context=context, timeout=45) as response:
             with open(temp_zip, 'wb') as f:
                 f.write(response.read())
         
@@ -153,7 +156,8 @@ def perform_exe_update(exe_url: str, version: str) -> dict:
             exe_url, 
             headers={'User-Agent': 'Mozilla/5.0'}
         )
-        with urllib.request.urlopen(req, timeout=120) as response:
+        context = ssl._create_unverified_context()
+        with urllib.request.urlopen(req, context=context, timeout=120) as response:
             with open(temp_exe_path, 'wb') as f:
                 f.write(response.read())
                 
