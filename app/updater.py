@@ -167,36 +167,50 @@ def perform_exe_update(exe_url: str, version: str) -> dict:
 
         # 2. Write the batch file that will replace the executable
         bat_path = os.path.join(temp_dir, "update_ytdl.bat")
+        current_exe_dir = os.path.dirname(current_exe_path)
         
-        # Windows batch to wait for process to terminate, overwrite exe, delete temp exe, start new exe and delete itself
+        # Windows batch to wait for process to terminate, overwrite exe, start new exe and delete itself
         bat_content = f"""@echo off
 title Actualizando YouTube Downloader...
-echo Esperando a que finalice la aplicacion...
+echo ===================================================
+echo Actualizando YouTube Downloader...
+echo ===================================================
+echo.
+echo Esperando a que finalice la aplicacion actual...
 timeout /t 3 /nobreak > nul
 
 :retry
+echo Intentando copiar el nuevo ejecutable...
 copy /y "{temp_exe_path}" "{current_exe_path}"
 if errorlevel 1 (
-    echo Reintentando en 2 segundos...
+    echo El archivo esta bloqueado. Reintentando en 2 segundos...
     timeout /t 2 /nobreak > nul
     goto retry
 )
 
+echo.
+echo Aplicacion actualizada con exito!
 echo Iniciando nueva version...
+cd /d "{current_exe_dir}"
 start "" "{current_exe_path}"
 (goto) 2>nul & del "%~f0"
 """
         with open(bat_path, "w", encoding="ansi") as f:
             f.write(bat_content)
             
-        # 3. Launch batch script asynchronously and detached
+        # 3. Launch batch script asynchronously and detached without handle inheritance
         if platform.system() == "Windows":
-            # Start batch script detached
-            subprocess.Popen(
-                [bat_path], 
-                shell=True,
-                creationflags=subprocess.CREATE_NO_WINDOW | subprocess.DETACHED_PROCESS
-            )
+            try:
+                # os.startfile completely detaches the process and prevents handle inheritance
+                os.startfile(bat_path)
+            except Exception:
+                # Fallback to subprocess with close_fds=True to prevent handle leakage
+                subprocess.Popen(
+                    [bat_path], 
+                    shell=True,
+                    close_fds=True,
+                    creationflags=subprocess.CREATE_NEW_CONSOLE | subprocess.DETACHED_PROCESS
+                )
         else:
             return {"success": False, "error": "Auto-update for executable only supported on Windows."}
             
