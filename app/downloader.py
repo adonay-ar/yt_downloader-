@@ -92,6 +92,12 @@ def get_video_info(url: str) -> Dict[str, Any]:
             
             # Add general presets
             formats.append({
+                'id': 'whatsapp',
+                'resolution': 'WhatsApp Compatible (MP4 - H.264/AAC)',
+                'ext': 'mp4',
+                'note': 'Optimized for direct sending and playing on WhatsApp Web'
+            })
+            formats.append({
                 'id': 'best',
                 'resolution': 'Best Quality (Combined)',
                 'ext': 'mp4',
@@ -105,21 +111,34 @@ def get_video_info(url: str) -> Dict[str, Any]:
             })
 
             # Extract actual formats available
+            dynamic_formats = []
             raw_formats = info.get('formats', [])
             for f in raw_formats:
                 height = f.get('height')
                 ext = f.get('ext')
+                vcodec = f.get('vcodec', '')
+                
                 # Filter formats to standard readable ones
-                if height and height >= 360 and ext == 'mp4':
-                    res_str = f"{height}p"
-                    if res_str not in seen_resolutions:
-                        seen_resolutions.add(res_str)
-                        formats.append({
+                if height and height >= 360:
+                    codec_name = "H.264" if "avc" in vcodec.lower() else ("VP9/AV1" if "vp" in vcodec.lower() or "av01" in vcodec.lower() else "Video")
+                    res_str = f"{height}p ({codec_name} {ext.upper()})"
+                    
+                    res_key = f"{height}_{ext}"
+                    if res_key not in seen_resolutions:
+                        seen_resolutions.add(res_key)
+                        dynamic_formats.append({
                             'id': f.get('format_id'),
-                            'resolution': f"{res_str} (MP4)",
+                            'resolution': res_str,
                             'ext': ext,
-                            'note': f.get('format_note', 'Standard Video')
+                            'height': height,
+                            'note': f.get('format_note', '') or f.get('vcodec', 'Video')
                         })
+                        
+            # Sort dynamic formats by resolution height descending
+            dynamic_formats.sort(key=lambda x: x['height'], reverse=True)
+            for df in dynamic_formats:
+                df.pop('height', None)
+                formats.append(df)
 
             return {
                 'success': True,
@@ -185,7 +204,11 @@ async def download_video_async(url: str, format_id: str, progress_callback: Call
         ydl_opts['cookiefile'] = cookie_path
 
     # Configure formats
-    if format_id == 'best':
+    if format_id == 'whatsapp':
+        # WhatsApp compatible: H.264 video + AAC audio
+        ydl_opts['format'] = 'bv*[ext=mp4]+ba[ext=m4a]/b[ext=mp4]'
+        ydl_opts['merge_output_format'] = 'mp4'
+    elif format_id == 'best':
         # yt-dlp default best video + best audio
         ydl_opts['format'] = 'bestvideo+bestaudio/best'
         ydl_opts['merge_output_format'] = 'mp4'
@@ -197,8 +220,8 @@ async def download_video_async(url: str, format_id: str, progress_callback: Call
             'preferredquality': '192',
         }]
     else:
-        # Download specific format and merge with best audio for full video
-        ydl_opts['format'] = f"{format_id}+bestaudio/best"
+        # Download specific format and merge with best AAC/m4a audio first for better compatibility
+        ydl_opts['format'] = f"{format_id}+ba[ext=m4a]/bestaudio/best"
         ydl_opts['merge_output_format'] = 'mp4'
 
     # Progress Hook definition
