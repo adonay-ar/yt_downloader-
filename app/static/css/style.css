@@ -284,6 +284,8 @@ input[type="text"]::placeholder {
     overflow: hidden;
     border: 1px solid var(--border-color);
     aspect-ratio: 16/9;
+    max-width: 480px;
+    width: 100%;
 }
 
 .video-preview-wrapper img {
@@ -1001,7 +1003,7 @@ select:focus {
 /* ==========================================
    RESPONSIVE DESIGN
    ========================================== */
-@media (max-width: 900px) {
+@media (max-width: 1024px) {
     .dashboard-grid {
         grid-template-columns: 1fr;
     }
@@ -1014,7 +1016,7 @@ select:focus {
 }
 
 /* Specific styling for tablet/medium screens when columns collapse */
-@media (min-width: 601px) and (max-width: 900px) {
+@media (min-width: 601px) and (max-width: 1024px) {
     .video-card {
         flex-direction: row;
         align-items: flex-start;
