@@ -4,6 +4,7 @@ import os
 import sys
 import asyncio
 import yt_dlp
+import ssl
 from typing import Callable, Optional, Dict, Any
 
 from app.paths import (
@@ -21,6 +22,28 @@ if base_dir not in os.environ.get('PATH', ''):
 # Ensure downloads and cookies directories exist
 get_downloads_dir()
 get_cookies_dir()
+
+# System dependencies statuses
+ffmpeg_status = "checking"
+deno_status = "checking"
+
+# Initialize statuses based on platform and availability
+if not sys.platform.startswith("win"):
+    ffmpeg_status = "ready"
+    deno_status = "ready"
+else:
+    import shutil
+    if shutil.which("ffmpeg") is not None or os.path.exists(os.path.join(base_dir, "ffmpeg.exe")):
+        ffmpeg_status = "ready"
+    else:
+        ffmpeg_status = "not_installed"
+
+    if (shutil.which("deno") is not None or 
+        shutil.which("node") is not None or 
+        os.path.exists(os.path.join(base_dir, "deno.exe"))):
+        deno_status = "ready"
+    else:
+        deno_status = "not_installed"
 
 # Define path for cookies file
 COOKIE_FILE_PATH = get_cookie_file_path()
@@ -115,6 +138,29 @@ def get_video_info(url: str) -> Dict[str, Any]:
 
 async def download_video_async(url: str, format_id: str, progress_callback: Callable[[Dict[str, Any]], None]):
     """Downloads video using yt-dlp python API with a progress hook."""
+    global ffmpeg_status
+    if ffmpeg_status != "ready":
+        # Double check if it has been downloaded or added to PATH recently
+        base_dir = get_base_dir()
+        ffmpeg_exe = "ffmpeg.exe" if sys.platform.startswith("win") else "ffmpeg"
+        local_ffmpeg = os.path.join(base_dir, ffmpeg_exe)
+        import shutil
+        if os.path.exists(local_ffmpeg) or shutil.which("ffmpeg") is not None:
+            ffmpeg_status = "ready"
+        else:
+            err_msg = "FFmpeg no está instalado. "
+            if ffmpeg_status == "downloading":
+                err_msg += "Se está descargando automáticamente en segundo plano. Espera unos instantes e inténtalo de nuevo."
+            elif ffmpeg_status == "failed":
+                err_msg += "La descarga automática de FFmpeg falló. Asegúrate de tener conexión a Internet y reinicia el servidor."
+            else:
+                err_msg += "Espera a que se complete la instalación."
+            progress_callback({
+                'status': 'failed',
+                'error': err_msg
+            })
+            return
+
     cookie_path = get_cookie_path()
     
     # Base options
@@ -307,6 +353,7 @@ async def run_oauth2_flow(ws_send_callback: Callable[[Dict[str, Any]], Any]):
 
 def check_and_download_ffmpeg():
     """Checks if ffmpeg is available. If not, downloads a static build for Windows in the background."""
+    global ffmpeg_status
     import sys
     import shutil
     import urllib.request
@@ -320,6 +367,7 @@ def check_and_download_ffmpeg():
     # 1. Check if ffmpeg is already in the system PATH
     if shutil.which("ffmpeg") is not None:
         print("[FFmpeg Manager] FFmpeg found in system PATH.")
+        ffmpeg_status = "ready"
         return
         
     # 2. Check if ffmpeg.exe exists in the base directory
@@ -327,17 +375,21 @@ def check_and_download_ffmpeg():
     ffmpeg_exe_path = os.path.join(base_dir, "ffmpeg.exe")
     if os.path.exists(ffmpeg_exe_path):
         print(f"[FFmpeg Manager] FFmpeg found locally at: {ffmpeg_exe_path}")
+        ffmpeg_status = "ready"
         return
         
     # 3. If missing, download it
     print("[FFmpeg Manager] FFmpeg not found. Starting background download...")
+    ffmpeg_status = "downloading"
     try:
         # Download stable ffbinaries Windows 64-bit build (only contains ffmpeg.exe)
         url = "https://github.com/ffbinaries/ffbinaries-prebuilt/releases/download/v4.4.1/ffmpeg-4.4.1-win-64.zip"
         temp_zip = os.path.join(tempfile.gettempdir(), "ffmpeg_download.zip")
         
+        # Bypass SSL verification to avoid errors on Windows 10 machines with outdated cert stores
+        context = ssl._create_unverified_context()
         req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-        with urllib.request.urlopen(req, timeout=180) as response:
+        with urllib.request.urlopen(req, context=context, timeout=180) as response:
             with open(temp_zip, 'wb') as f:
                 f.write(response.read())
                 
@@ -350,12 +402,15 @@ def check_and_download_ffmpeg():
             try: os.remove(temp_zip)
             except: pass
             
+        ffmpeg_status = "ready"
         print(f"[FFmpeg Manager] FFmpeg downloaded and extracted successfully to: {base_dir}")
     except Exception as e:
+        ffmpeg_status = "failed"
         print(f"[FFmpeg Manager] Failed to automatically download FFmpeg: {e}")
 
 def check_and_download_deno():
     """Checks if deno or node is available. If not, downloads Deno for Windows in the background."""
+    global deno_status
     import sys
     import shutil
     import urllib.request
@@ -369,6 +424,7 @@ def check_and_download_deno():
     # 1. Check if deno or node is already in system PATH
     if shutil.which("deno") is not None or shutil.which("node") is not None:
         print("[JS Runtime Manager] Deno/Node found in system PATH.")
+        deno_status = "ready"
         return
         
     # 2. Check if deno.exe exists in the base directory
@@ -376,17 +432,21 @@ def check_and_download_deno():
     deno_exe_path = os.path.join(base_dir, "deno.exe")
     if os.path.exists(deno_exe_path):
         print(f"[JS Runtime Manager] Deno found locally at: {deno_exe_path}")
+        deno_status = "ready"
         return
         
     # 3. If missing, download it
     print("[JS Runtime Manager] Deno not found. Starting background download...")
+    deno_status = "downloading"
     try:
         # Download Deno stable for windows x64
         url = "https://github.com/denoland/deno/releases/download/v1.45.5/deno-x86_64-pc-windows-msvc.zip"
         temp_zip = os.path.join(tempfile.gettempdir(), "deno_download.zip")
         
+        # Bypass SSL verification to avoid errors on Windows 10 machines with outdated cert stores
+        context = ssl._create_unverified_context()
         req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-        with urllib.request.urlopen(req, timeout=180) as response:
+        with urllib.request.urlopen(req, context=context, timeout=180) as response:
             with open(temp_zip, 'wb') as f:
                 f.write(response.read())
                 
@@ -399,8 +459,10 @@ def check_and_download_deno():
             try: os.remove(temp_zip)
             except: pass
             
+        deno_status = "ready"
         print(f"[JS Runtime Manager] Deno downloaded and extracted successfully to: {base_dir}")
     except Exception as e:
+        deno_status = "failed"
         print(f"[JS Runtime Manager] Failed to automatically download Deno: {e}")
 
 

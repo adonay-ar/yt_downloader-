@@ -194,6 +194,14 @@ class UpdateInstallRequest(BaseModel):
 async def api_get_version():
     return {"version": get_current_version()}
 
+@app.get("/api/system/status")
+def api_system_status():
+    import app.downloader
+    return {
+        "ffmpeg": app.downloader.ffmpeg_status,
+        "deno": app.downloader.deno_status
+    }
+
 @app.get("/api/update/check")
 async def api_check_update(url: str = None):
     # Allows pulling from custom environment variable or raw URL

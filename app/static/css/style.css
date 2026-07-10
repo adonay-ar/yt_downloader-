@@ -909,6 +909,12 @@ select:focus {
     border: 1px solid rgba(217, 119, 6, 0.3);
 }
 
+.update-status-badge.status-danger {
+    background: rgba(220, 38, 38, 0.15);
+    color: var(--color-danger-hover);
+    border: 1px solid rgba(220, 38, 38, 0.3);
+}
+
 .update-actions {
     display: flex;
     gap: 0.8rem;

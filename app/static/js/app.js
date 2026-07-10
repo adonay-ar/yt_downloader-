@@ -69,6 +69,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const lnkCheckUpdate = document.getElementById('lnk-check-update');
     const lblInstallingText = document.getElementById('lbl-installing-text');
     const btnShutdownServer = document.getElementById('btn-shutdown-server');
+    const lblFfmpegStatus = document.getElementById('lbl-ffmpeg-status');
+    const lblDenoStatus = document.getElementById('lbl-deno-status');
 
     // State Variables
     let currentVideoUrl = '';
@@ -732,8 +734,58 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    function updateStatusBadge(element, status) {
+        if (!element) return;
+        
+        // Reset classes
+        element.className = 'update-status-badge';
+        
+        if (status === 'ready') {
+            element.classList.add('status-ok');
+            element.textContent = 'Listo';
+        } else if (status === 'downloading') {
+            element.classList.add('status-alert');
+            element.textContent = 'Descargando...';
+        } else if (status === 'failed') {
+            element.classList.add('status-danger');
+            element.textContent = 'Error';
+        } else if (status === 'not_installed') {
+            element.classList.add('status-alert');
+            element.textContent = 'No Instalado';
+        } else {
+            element.textContent = status;
+        }
+    }
+
+    let statusInterval = null;
+    function startDependencyStatusPoll() {
+        const fetchStatus = async () => {
+            try {
+                const res = await fetch('/api/system/status');
+                if (res.ok) {
+                    const data = await res.json();
+                    updateStatusBadge(lblFfmpegStatus, data.ffmpeg);
+                    updateStatusBadge(lblDenoStatus, data.deno);
+                    
+                    const isFfmpegDone = (data.ffmpeg === 'ready' || data.ffmpeg === 'failed' || data.ffmpeg === 'not_installed');
+                    const isDenoDone = (data.deno === 'ready' || data.deno === 'failed' || data.deno === 'not_installed');
+                    if (isFfmpegDone && isDenoDone && statusInterval) {
+                        clearInterval(statusInterval);
+                    }
+                }
+            } catch (err) {
+                console.error('Error fetching dependency status:', err);
+            }
+        };
+
+        fetchStatus();
+        statusInterval = setInterval(fetchStatus, 3000);
+    }
+
     // Check cookie status on load
     checkCookieStatus();
     // Load app version details
     fetchVersion();
+    // Poll dependency status
+    startDependencyStatusPoll();
 });
