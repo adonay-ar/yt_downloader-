@@ -15,7 +15,8 @@ from app.downloader import (
     run_oauth2_flow,
     get_cookie_path,
     COOKIE_FILE_PATH,
-    check_and_download_ffmpeg
+    check_and_download_ffmpeg,
+    check_and_download_deno
 )
 from app.updater import get_current_version, check_for_updates, perform_update, perform_exe_update
 from app.paths import get_downloads_dir, get_static_dir, get_version_file_path
@@ -276,6 +277,7 @@ if os.path.exists(static_dir):
 async def startup_event():
     import threading
     threading.Thread(target=check_and_download_ffmpeg, daemon=True).start()
+    threading.Thread(target=check_and_download_deno, daemon=True).start()
 
 @app.post("/api/system/shutdown")
 async def shutdown_system():

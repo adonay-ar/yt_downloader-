@@ -13,6 +13,11 @@ from app.paths import (
     get_cookie_file_path
 )
 
+# Add base directory to PATH so yt-dlp can locate local deno.exe and ffmpeg.exe
+base_dir = get_base_dir()
+if base_dir not in os.environ.get('PATH', ''):
+    os.environ['PATH'] = base_dir + os.pathsep + os.environ.get('PATH', '')
+
 # Ensure downloads and cookies directories exist
 get_downloads_dir()
 get_cookies_dir()
@@ -348,4 +353,54 @@ def check_and_download_ffmpeg():
         print(f"[FFmpeg Manager] FFmpeg downloaded and extracted successfully to: {base_dir}")
     except Exception as e:
         print(f"[FFmpeg Manager] Failed to automatically download FFmpeg: {e}")
+
+def check_and_download_deno():
+    """Checks if deno or node is available. If not, downloads Deno for Windows in the background."""
+    import sys
+    import shutil
+    import urllib.request
+    import zipfile
+    import tempfile
+    
+    # We only auto-download for Windows
+    if not sys.platform.startswith("win"):
+        return
+        
+    # 1. Check if deno or node is already in system PATH
+    if shutil.which("deno") is not None or shutil.which("node") is not None:
+        print("[JS Runtime Manager] Deno/Node found in system PATH.")
+        return
+        
+    # 2. Check if deno.exe exists in the base directory
+    base_dir = get_base_dir()
+    deno_exe_path = os.path.join(base_dir, "deno.exe")
+    if os.path.exists(deno_exe_path):
+        print(f"[JS Runtime Manager] Deno found locally at: {deno_exe_path}")
+        return
+        
+    # 3. If missing, download it
+    print("[JS Runtime Manager] Deno not found. Starting background download...")
+    try:
+        # Download Deno stable for windows x64
+        url = "https://github.com/denoland/deno/releases/download/v1.45.5/deno-x86_64-pc-windows-msvc.zip"
+        temp_zip = os.path.join(tempfile.gettempdir(), "deno_download.zip")
+        
+        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req, timeout=180) as response:
+            with open(temp_zip, 'wb') as f:
+                f.write(response.read())
+                
+        # Extract the zip file contents (deno.exe) directly into base_dir
+        with zipfile.ZipFile(temp_zip, 'r') as zip_ref:
+            zip_ref.extractall(base_dir)
+            
+        # Clean up zip
+        if os.path.exists(temp_zip):
+            try: os.remove(temp_zip)
+            except: pass
+            
+        print(f"[JS Runtime Manager] Deno downloaded and extracted successfully to: {base_dir}")
+    except Exception as e:
+        print(f"[JS Runtime Manager] Failed to automatically download Deno: {e}")
+
 

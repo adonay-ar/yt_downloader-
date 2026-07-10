@@ -1,6 +1,6 @@
 {
-  "version": "1.0.0",
-  "release_notes": "Notas del lanzamiento...",
+  "version": "1.0.1",
+  "release_notes": "Corrección de errores para la extracción de formatos en Windows 10/11 sin entorno de ejecución de JS preinstalado (descarga automática de Deno portable).",
   "zip_url": "https://github.com/adonay-ar/yt_downloader-/archive/refs/heads/main.zip",
-  "exe_url": "https://github.com/adonay-ar/yt_downloader-/releases/download/v1.0.0/yt_downloader.exe"
+  "exe_url": "https://github.com/adonay-ar/yt_downloader-/releases/download/v1.0.1/yt_downloader.exe"
 }
