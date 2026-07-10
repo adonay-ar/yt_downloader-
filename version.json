@@ -1,5 +1,5 @@
 {
-  "version": "1.0.4",
+  "version": "1.0.5",
   "release_notes": "Corrección de errores: se soluciona el fallo de 'ffmpeg is not installed' en Windows 10/11 omitiendo las validaciones de SSL locales e introduciendo un control e indicador de estado de dependencias en tiempo real.",
   "zip_url": "https://github.com/adonay-ar/yt_downloader-/archive/refs/heads/main.zip",
   "exe_url": "https://github.com/adonay-ar/yt_downloader-/releases/download/v1.0.5/yt_downloader.exe"
